@@ -6,8 +6,10 @@ use bvb\siteoption\backend\models\SiteOption;
 use kartik\form\ActiveForm;
 use Yii;
 use yii\base\Action;
+use yii\base\Event;
 use yii\base\InvalidConfigException;
 use yii\base\UserException;
+use yii\web\NotFoundHttpException;
 use yii\helpers\Html;
 use yii\helpers\Inflector;
 
@@ -17,6 +19,14 @@ use yii\helpers\Inflector;
  */
 class MetaSaveAction extends Action
 {
+    /**
+     * Name of the event to be triggered after the saving of metadata is complete.
+     * This is run after all posted meta data has at least attempted to been saved
+     * regardless of success.
+     * @var string
+     */
+    const EVENT_SAVING_DONE = 'metaSavingDone';
+
     /**
      * The name of the meta model class we will be saving. It should use the trait
      * \common\meta\MetaModelTrait or implement the necessary functions
@@ -84,6 +94,12 @@ class MetaSaveAction extends Action
     public $checkAccess;
 
     /**
+     * Whether or not to throw an error when a failed save happens
+     * @var boolean
+     */
+    public $throwErrorOnSaveFail = false;
+
+    /**
      * Initialize the form used to create the model
      * Set the a submit button as a toolbar widget
      * {@inheritdoc}
@@ -143,7 +159,9 @@ class MetaSaveAction extends Action
                     $viewParams['metaModels'][$metaKey]->value = $keyValueArray['value'];
                     if(!$viewParams['metaModels'][$metaKey]->save()){
                         $allSaved = false;
-                        throw new UserException('Unknown error when trying to save meta field '.$metaKey.'. Please troubleshoot.'.print_r($viewParams['metaModels'][$metaKey],true));
+                        if($this->throwErrorOnSaveFail){
+                            throw new UserException('Unknown error when trying to save meta field '.$metaKey.'. Please troubleshoot.'.print_r($viewParams['metaModels'][$metaKey],true));
+                        }
                     }                    
                 } elseif(
                     empty($keyValueArray['value']) &&
@@ -152,6 +170,13 @@ class MetaSaveAction extends Action
                     $viewParams['metaModels'][$metaKey]->delete();
                 }
             }
+
+            // --- Trigger the event that the saving has been done so handlers can be registered
+            $event = new MetaSavedEvent([
+                'subjectModel' => $subjectModel
+            ]);
+            $this->trigger(self::EVENT_SAVING_DONE, $event);
+
             if($allSaved){
                 if(!empty($this->savedFlashMessage)){
                     Yii::$app->session->addFlash('success', $this->savedFlashMessage);
