@@ -39,6 +39,12 @@ trait MetaModelTrait
     public $rules = [];
 
     /**
+     * Array of configuration if this meta model should use a specific input type
+     * @var array
+     */
+    public $input = [];
+
+    /**
      * Uses [[$rules]] to append additional custom rules per instance for specific
      * needs in regards to options that a developer may include in their application
      * {@inheritdoc}
