@@ -2,72 +2,30 @@
 
 namespace bvb\meta;
 
-use bvb\siteoption\backend\models\SiteOption;
-use kartik\form\ActiveForm;
+
 use Yii;
 use yii\base\Action;
-use yii\base\Event;
 use yii\base\InvalidConfigException;
 use yii\base\UserException;
 use yii\web\NotFoundHttpException;
-use yii\helpers\Html;
 use yii\helpers\Inflector;
 
 /**
- * MetaSaveAction is best used on pages where one intends to display meta data
- * models on a single page that require saving.
+ * MetaSaveAction for updating meta models related to a subject model
+ * but does not require saving any data on the subject model
  */
 class MetaSaveAction extends Action
 {
     /**
-     * Name of the event to be triggered after the saving of metadata is complete.
-     * This is run after all posted meta data has at least attempted to been saved
-     * regardless of success.
-     * @var string
+     * Implement properties needed for MetaActions
      */
-    const EVENT_SAVING_DONE = 'metaSavingDone';
-
-    /**
-     * The name of the meta model class we will be saving. It should use the trait
-     * \common\meta\MetaModelTrait or implement the necessary functions
-     * @var string
-     */
-    public $metaModelClass;
+    use MetaActionTrait;
 
     /**
      * The name of the model class for the subject we are saving meta data about.
      * @var string
      */
     public $subjectModelClass;
-
-    /**
-     * Configuration for options that should be saved by this action.
-     * An example format is:
-     * ```
-     * $metaConfig = [
-     *       self::MYOPTION => [
-     *           'label' => 'Label for My Option',
-     *           'hint' => 'This is the hint for the option',
-     *           'value' => 'defaultValue',
-     *           'rules' => [
-     *               ['string', 'max' => 1000]
-     *           ]
-     *       ]
-     * ]
-     * ```
-     * The key to each options configuration array will be modified using
-     * [[yii\helpers\Inflector::variablize()]] and a SiteOption model will
-     * be passed into the view using that name
-     * @var array
-     */
-    public $metaConfig = [];
-
-    /**
-     * The flash message that will be displayed if all options saved successfully
-     * on submission. Can be set to false or null to have no flash message
-     * @var string
-     */
-    public $savedFlashMessage = 'Saved Successfully';
 
     /**
      * URL to be redirected to after a successful save. Defaults to self so the
@@ -92,12 +50,6 @@ class MetaSaveAction extends Action
      * @var null|Closure
      */
     public $checkAccess;
-
-    /**
-     * Whether or not to throw an error when a failed save happens
-     * @var boolean
-     */
-    public $throwErrorOnSaveFail = false;
 
     /**
      * Initialize the form used to create the model
@@ -175,7 +127,7 @@ class MetaSaveAction extends Action
             $event = new MetaSavedEvent([
                 'subjectModel' => $subjectModel
             ]);
-            $this->trigger(self::EVENT_SAVING_DONE, $event);
+            $this->trigger(MetaHelper::EVENT_SAVING_DONE, $event);
 
             if($allSaved){
                 if(!empty($this->savedFlashMessage)){
