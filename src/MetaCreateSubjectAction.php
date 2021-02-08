@@ -136,7 +136,7 @@ class MetaCreateSubjectAction extends \bvb\crud\actions\Create
                     return $this->controller->redirect([$this->partialSucessRedirect, 'id' => $subjectModel->id]);
                 }
             }
-            return $this->controller->redirect($this->getRedirect());
+            return $this->controller->redirect($this->getRedirect($subjectModel));
         }
         return $this->controller->render($this->view, $viewParams);
     }
