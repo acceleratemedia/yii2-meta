@@ -2,6 +2,8 @@
 
 namespace bvb\meta;
 
+use yii\base\InvalidConfigException;
+
 /**
  * MetaInputListWidget renders inputs for MetaModels in a list
  */
@@ -44,7 +46,16 @@ class MetaInputListWidget extends \yii\base\Widget
 				$class = ArrayHelper::remove($config, 'class');
 				$inputWidgetsHtml[] = $activeField->widget($class, $config);
 			} else {
-				$inputWidgetsHtml[] = $activeField->textInput();
+                if(!isset($this->metaConfig[$metaKey]['input']['type'])){
+                    $inputWidgetsHtml[] = $activeField->textInput();
+                } else {                
+                    switch($this->metaConfig[$metaKey]['input']['type']){
+                        case 'textarea':
+                            $inputWidgetsHtml[] = $activeField->textarea();
+                            break;
+                        default: throw new InvalidConfigException('Unknown input configured for meta field');
+                    }
+                }
 			}
 		}
 		return implode("\n", $inputWidgetsHtml);
