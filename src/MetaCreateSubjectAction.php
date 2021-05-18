@@ -77,8 +77,8 @@ class MetaCreateSubjectAction extends \bvb\crud\actions\Create
 
         // --- Process the posted meta
         $metaPostParams = Yii::$app->request->post($this->metaModelClass::instance()->formName());
+        $allMetaValidates = true;
         if(!empty($metaPostParams)){
-            $allMetaValidates = true;
             foreach($metaPostParams as $metaKey => $keyValueArray){
                 $viewParams['metaModels'][$metaKey]->value = $keyValueArray['value'];
 
@@ -136,7 +136,7 @@ class MetaCreateSubjectAction extends \bvb\crud\actions\Create
                     return $this->controller->redirect([$this->partialSucessRedirect, 'id' => $subjectModel->id]);
                 }
             }
-            return $this->controller->redirect($this->getRedirect($subjectModel));
+            return $this->controller->redirect($this->getRedirectUrl($subjectModel));
         }
         return $this->controller->render($this->view, $viewParams);
     }
