@@ -1,5 +1,5 @@
 {
-    "name": "brianvb/yii2-meta",
+    "name": "acceleratemedia/yii2-meta",
     "description": "Classes helpful for storing metadata on a table in a related table",
     "type": "yii2-extension",
     "require": {
