@@ -5,6 +5,7 @@ namespace bvb\meta;
 use Yii;
 use yii\base\Behavior;
 use yii\base\UnknownPropertyException;
+use yii\base\UnknownMethodException;
 use yii\db\Query;
 
 /**
@@ -74,7 +75,6 @@ class MetaBehavior extends Behavior
         }
     }
 
-
     /**
      * Extend the default functionality of the getter to say it can get
      * the meta property
@@ -97,5 +97,36 @@ class MetaBehavior extends Behavior
             $this->ownerForeignKeyField = $this->owner->tableName().'_id';
         }
         return $this->ownerForeignKeyField;
+    }
+
+    /**
+     * Extend the default functionality of the getter to say it can get
+     * the meta property
+     * {@inheritdoc}
+     */
+    public function hasMethod($name)
+    {
+        return parent::hasMethod($name) || 
+            substr($name, 0, 7) == 'getmeta';
+    }
+
+    /**
+     * This will make relational queries in the format 'meta{KeyName}'
+     */
+    public function __call($name, $params)
+    {
+        try{
+            return parent::__get($name);
+        } catch(UnknownPropertyException $e){
+            if(substr($name, 0, 7) == 'getmeta'){
+                $metaKey = lcfirst(str_replace('getmeta', '', $name));
+                return $this->owner->hasOne(
+                            $this->metaModelClass,
+                            [$this->getOwnerForeignKeyField() => 'id']
+                        )->andOnCondition([$metaKey.'.key' => $metaKey])
+                        ->alias($metaKey);
+            }
+            throw $e;
+        }
     }
 }

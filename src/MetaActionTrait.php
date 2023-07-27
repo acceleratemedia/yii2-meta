@@ -20,9 +20,9 @@ trait MetaActionTrait
      * An example format is:
      * ```
      * $metaConfig = [
-     *       self::MYOPTION => [
-     *           'label' => 'Label for My Option',
-     *           'hint' => 'This is the hint for the option',
+     *       self::MY_META => [
+     *           'label' => 'Label for My Meta',
+     *           'hint' => 'This is the hint for the meta',
      *           'value' => 'defaultValue',
      *           'rules' => [
      *               ['string', 'max' => 1000]

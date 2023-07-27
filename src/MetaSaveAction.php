@@ -4,7 +4,6 @@ namespace bvb\meta;
 
 
 use Yii;
-use yii\base\Action;
 use yii\base\InvalidConfigException;
 use yii\base\UserException;
 use yii\web\NotFoundHttpException;
@@ -14,12 +13,17 @@ use yii\helpers\Inflector;
  * MetaSaveAction for updating meta models related to a subject model
  * but does not require saving any data on the subject model
  */
-class MetaSaveAction extends Action
+class MetaSaveAction extends \yii\base\Action
 {
     /**
      * Implement properties needed for MetaActions
      */
     use MetaActionTrait;
+
+    /**
+     * @var String initialization event
+     */
+    const EVENT_INIT = 'init';
 
     /**
      * The name of the model class for the subject we are saving meta data about.
@@ -39,7 +43,7 @@ class MetaSaveAction extends Action
      * Name of the view file to be rendered that displays the option inputs.
      * @var string
      */
-    public $view = 'index';
+    public $view = '@bvb/meta/view';
 
     /**
      * A closure function may be supplied to check if a user should have access.
@@ -59,14 +63,12 @@ class MetaSaveAction extends Action
     public function init()
     {
         parent::init();
+        $this->trigger(self::EVENT_INIT);
         if(empty($this->metaModelClass)){
             throw new InvalidConfigException('The property $metaModelClass must be configured with the class name');
         }
         if(empty($this->subjectModelClass)){
             throw new InvalidConfigException('The property $subjectModelClass must be configured with the class name');
-        }
-        if(empty($this->metaConfig)){
-            throw new InvalidConfigException('A configuration array for meta data intended to be displayed and saved must be provided for this action to save in the $metaConfig property.');
         }
     }
 
@@ -81,6 +83,10 @@ class MetaSaveAction extends Action
      */
     public function run($subjectId)
     {
+        if(empty($this->metaConfig)){
+            throw new InvalidConfigException('A configuration array for meta data intended to be displayed and saved must be provided for this action to save in the $metaConfig property.');
+        }
+
         $subjectModel = $this->subjectModelClass::findOne($subjectId);
 
         if(!$subjectModel){
@@ -88,13 +94,15 @@ class MetaSaveAction extends Action
         }
 
         if(is_array($this->checkAccess) || $this->checkAccess instanceof \Closure){
-            call_user_func($this->checkAccess, $subjectModel);
+            call_user_func($this->checkAccess, $this->id, $subjectModel);
         }
 
         $viewParams = [
             'subjectModel' => $subjectModel,
-            'metaModels' => []
+            'metaModels' => [],
+            'metaConfig' => $this->metaConfig
         ];
+
         foreach($this->metaConfig as $metaKey => $metaConfig){
             $metaModel = $this->metaModelClass::getModel($metaKey, $subjectId, $metaConfig);
             $viewParams['metaModels'][Inflector::variablize($metaKey)] = $metaModel;

@@ -46,9 +46,7 @@ class MetaCreateSubjectAction extends \bvb\crud\actions\Create
      */
     public function run()
     {
-        if ($this->checkAccess) {
-            call_user_func($this->checkAccess, $this->id);
-        }
+        $this->checkAccess();
 
         // --- Create the subject model class
         $subjectModel = Yii::createObject(\yii\helpers\ArrayHelper::merge(
